@@ -44,8 +44,13 @@
 
 #define FONA_DEFAULT_TIMEOUT_MS 500
 
+#define FONA_SMS_ALL 0
+#define FONA_SMS_UNREAD 1
+#define FONA_SMS_READ 2
+
 class SIM90X : public Stream {
  public:
+  SIM90X();
   SIM90X(int8_t r);
   boolean begin(Stream &port);
 
@@ -57,7 +62,7 @@ class SIM90X : public Stream {
   void flush();
 
   // Raw
-  void AT(char *cmd);
+  void AT(char *cmd, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
 
   // RTC
   boolean enableRTC(uint8_t i);
@@ -77,6 +82,12 @@ class SIM90X : public Stream {
   // IMEI
   uint8_t getIMEI(char *imei);
 
+  // Phone Book
+  boolean getPhonebook(uint8_t addr, char *number, int number_length, char *name, int name_length);
+  boolean getPhonebookNumber(uint8_t i, char *number, int length);
+  boolean getPhonebookName(uint8_t i, char *name, int length);
+  uint8_t hasPhonebookNumber(char *number);
+
   // set Audio output
   boolean setAudio(uint8_t a);
   boolean setVolume(uint8_t i);
@@ -92,6 +103,7 @@ class SIM90X : public Stream {
   boolean sendSMS(char *smsaddr, char *smsmsg);
   boolean deleteSMS(uint8_t i);
   boolean getSMSSender(uint8_t i, char *sender, int senderlen);
+  uint8_t hasSMS(uint8_t type, uint8_t *addr);
 
   // Time
   boolean enableNetworkTimeSync(boolean onoff);
@@ -102,6 +114,7 @@ class SIM90X : public Stream {
   boolean enableGPRS(boolean onoff);
   uint8_t GPRSstate(void);
   boolean getGSMLoc(uint16_t *replycode, char *buff, uint16_t maxlen);
+  //void setGPRSNetworkSettings(const char *apn, const char *username = 0, const char *password = 0);
   void setGPRSNetworkSettings(const __FlashStringHelper *apn, const __FlashStringHelper *username=0, const __FlashStringHelper *password=0);
 
   // HTTP 

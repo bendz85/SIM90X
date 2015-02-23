@@ -44,7 +44,7 @@ void setup() {
   while (!Serial);
 
   Serial.begin(115200);
-  Serial.println(F("SIM90X basic test"));
+  Serial.println(F("SIM90X CLI"));
   Serial.println(F("Initializing....(May take 3 seconds)"));
 
   // make it slow so its easy to read!
@@ -77,7 +77,6 @@ void setup() {
   //sim.setHTTPSRedirect(true);
 
   printMenu();
-  //sim.AT("AT+CPMS=?");
 }
 
 void printMenu(void) {
@@ -524,7 +523,7 @@ void loop() {
       Serial.println(data);
       
        Serial.println(F("****"));
-       if (!sim.HTTP_POST_start(url, F("text/plain"), (uint8_t *) data, strlen(data), &statuscode, (uint16_t *)&length)) {
+       if (!sim.HTTP_POST_start(url, F("application/x-www-form-urlencoded"), (uint8_t *) data, strlen(data), &statuscode, (uint16_t *)&length)) {
          Serial.println("Failed!");
          break;
        }

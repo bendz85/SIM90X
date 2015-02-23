@@ -28,6 +28,15 @@
 
 #include "SIM90X.h"
 
+SIM90X::SIM90X(){
+  apn = F("SIM90X");
+  apnusername = 0;
+  apnpassword = 0;
+  mySerial = 0;
+  httpsredirect = false;
+  useragent = F("SIM90X");
+}
+
 SIM90X::SIM90X(int8_t rst){
   _rstpin = rst;
   
@@ -42,15 +51,17 @@ SIM90X::SIM90X(int8_t rst){
 boolean SIM90X::begin(Stream &port) {
   mySerial = &port;
 
-  pinMode(_rstpin, OUTPUT);
-  digitalWrite(_rstpin, HIGH);
-  delay(10);
-  digitalWrite(_rstpin, LOW);
-  delay(100);
-  digitalWrite(_rstpin, HIGH);
-
-  // give 3 seconds to reboot
-  delay(3000);
+  if(_rstpin){
+    pinMode(_rstpin, OUTPUT);
+    digitalWrite(_rstpin, HIGH);
+    delay(10);
+    digitalWrite(_rstpin, LOW);
+    delay(100);
+    digitalWrite(_rstpin, HIGH);
+  
+    // give 3 seconds to reboot
+    delay(3000);
+  }
 
   while (mySerial->available()) mySerial->read();
 
@@ -72,8 +83,8 @@ boolean SIM90X::begin(Stream &port) {
   return true;
 }
 
-void SIM90X::AT(char *cmd){
-  getReply(cmd);
+void SIM90X::AT(char *cmd, uint16_t timeout){
+  getReply(cmd, timeout);
 }
 
 /********* Real Time Clock ********************************************/
@@ -147,6 +158,65 @@ uint8_t SIM90X::getIMEI(char *imei) {
   readline(); // eat 'OK'
 
   return strlen(imei);
+}
+
+/********* PHONEBOOK ****************************************************/
+
+boolean SIM90X::getPhonebook(uint8_t addr, char *number, int number_length, char *name, int name_length) {
+  boolean status;
+  // Send command to retrieve PHONEBOOK item and parse a line of response.
+  mySerial->print(F("AT+CPBR="));
+  mySerial->println(addr);
+  readline();
+  // Parse the second field in the response.
+  if((status = parseReplyQuoted(F("+CPBR:"), number, number_length, ',', 1))){
+    parseReplyQuoted(F("+CPBR:"), name, name_length, ',', 3);
+  }
+
+  // Drop any remaining data from the response.
+  flushInput();
+  return status;
+}
+
+boolean SIM90X::getPhonebookNumber(uint8_t i, char *number, int length) {
+  // Send command to retrieve PHONEBOOK item and parse a line of response.
+  mySerial->print(F("AT+CPBR="));
+  mySerial->println(i);
+  readline(1000);
+  // Parse the second field in the response.
+  boolean result = parseReplyQuoted(F("+CPBR:"), number, length, ',', 1);
+  // Drop any remaining data from the response.
+  flushInput();
+  return result;
+}
+
+boolean SIM90X::getPhonebookName(uint8_t i, char *name, int length) {
+  // Send command to retrieve PHONEBOOK item and parse a line of response.
+  mySerial->print(F("AT+CPBR="));
+  mySerial->println(i);
+  readline(1000);
+  // Parse the second field in the response.
+  boolean result = parseReplyQuoted(F("+CPBR:"), name, length, ',', 3);
+  // Drop any remaining data from the response.
+  flushInput();
+  return result;
+}
+
+uint8_t SIM90X::hasPhonebookNumber(char *number) {
+  uint8_t addr = 0;
+  for(uint8_t i = 0; i < 20; i++){
+    char buffer[24];
+
+    mySerial->print(F("AT+CPBR="));
+    mySerial->println(i + 1);
+    readline(1000);
+    if(parseReplyQuoted(F("+CPBR:"), buffer, 24, ',', 1)){
+      if(strcmp(number, buffer) == 0) return (i + 1);
+    }
+    flushInput();
+  }
+  
+  return addr;
 }
 
 /********* NETWORK *******************************************************/
@@ -378,7 +448,6 @@ boolean SIM90X::sendSMS(char *smsaddr, char *smsmsg) {
   return true;
 }
 
-
 boolean SIM90X::deleteSMS(uint8_t i) {
   if (! sendCheckReply("AT+CMGF=1", "OK")) return -1;
   // read an sms
@@ -390,6 +459,38 @@ boolean SIM90X::deleteSMS(uint8_t i) {
   sendbuff[10] = i + '0';
 
   return sendCheckReply(sendbuff, "OK", 2000);
+}
+
+uint8_t SIM90X::hasSMS(uint8_t type, uint8_t *addr){
+  uint8_t i = 0;
+  boolean status;
+
+  mySerial->print(F("AT+CMGL="));
+  switch(type){
+    case 0:
+      mySerial->println(F("\"ALL\""));
+      break;
+    case 1:
+      mySerial->println(F("\"REC UNREAD\""));
+      break;
+    case 2:
+      mySerial->println(F("\"REC READ\""));
+      break;
+  }
+
+  do{
+    char buffer[8] = {0};
+    readline(FONA_DEFAULT_TIMEOUT_MS);
+    if((status = parseReplyQuoted(F("+CMGL:"), buffer, 8, ',', 0))){
+      addr[i] = (uint8_t)atoi(buffer);
+      i++;
+      readline(); // eat this line;
+    }
+  }while(status);
+
+  // Drop any remaining data from the response.
+  flushInput();
+  return i;
 }
 
 /********* TIME **********************************************************/
@@ -456,15 +557,14 @@ boolean SIM90X::getTime(char *buff, uint16_t maxlen) {
 
 /********* GPRS **********************************************************/
 
-boolean SIM90X::enableGPRS(boolean onoff) {
-  
+boolean SIM90X::enableGPRS(boolean onoff) { 
   if(onoff){
     if(!sendCheckReply(F("AT+CGATT=1"), F("OK"), 10000))
       return false;
 
     // open GPRS context
-    if(!sendCheckReply(F("AT+CIFSR"), F("OK"), 10000))
-      return false;
+    //if(!sendCheckReply(F("AT+CIFSR"), F("OK"), 10000))
+    //  return false;
 
     // set bearer profile! connection type GPRS
     if(!sendCheckReply(F("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\""), F("OK"), 10000))
@@ -472,7 +572,6 @@ boolean SIM90X::enableGPRS(boolean onoff) {
 
     // set bearer profile access point name
     if(apn){
-      Serial.println(apn);
       // Send command AT+SAPBR=3,1,"APN","<apn value>" where <apn value> is the configured APN value.
       if(!sendCheckReplyQuoted(F("AT+SAPBR=3,1,\"APN\","), apn, F("OK"), 10000))
         return false;
@@ -489,6 +588,8 @@ boolean SIM90X::enableGPRS(boolean onoff) {
           return false;
       }
     }
+
+    sendCheckReply(F("AT+SAPBR=0,1"), F("OK"), 10000);
 
     // open GPRS context
     if(!sendCheckReply(F("AT+SAPBR=1,1"), F("OK"), 10000))
@@ -537,8 +638,7 @@ boolean SIM90X::getGSMLoc(uint16_t *errorcode, char *buff, uint16_t maxlen) {
   return true;
 }
 
-boolean SIM90X::HTTP_GET_start(char *url,
-              uint16_t *status, uint16_t *datalen){
+boolean SIM90X::HTTP_GET_start(char *url, uint16_t *status, uint16_t *datalen){
   if (! HTTP_initialize(url))
     return false;
 
