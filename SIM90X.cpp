@@ -465,19 +465,51 @@ boolean SIM90X::deleteSMS(uint8_t i) {
   return sendCheckReply(sendbuff, "OK", 2000);
 }
 
+boolean SIM90X::deleteSMSs(uint8_t type){
+  if (! sendCheckReply("AT+CMGF=1", "OK")) return -1;
+  
+  char t[14];
+  char buffer[22];
+
+  switch(type){
+    case FONA_SMS_ALL:
+      strcpy_P(t, PSTR("\"DEL ALL\""));
+      break;
+    case FONA_SMS_READ:
+      strcpy_P(t, PSTR("\"DEL READ\""));
+      break;
+    case FONA_SMS_UNREAD:
+      strcpy_P(t, PSTR("\"DEL UNREAD\""));
+      break;
+    case FONA_SMS_SENT:
+      strcpy_P(t, PSTR("\"DEL SENT\""));
+      break;
+    case FONA_SMS_UNSENT:
+      strcpy_P(t, PSTR("\"DEL UNSENT\""));
+      break;
+    case FONA_SMS_INBOX:
+      strcpy_P(t, PSTR("\"DEL INBOX\""));
+      break;
+  }
+
+  sprintf_P(buffer, "AT+CMGDA=%s", t);
+
+  return sendCheckReply(buffer, "OK", 2000);
+}
+
 uint8_t SIM90X::hasSMS(uint8_t type){
   uint8_t i = 0;
   boolean status;
 
   mySerial->print(F("AT+CMGL="));
   switch(type){
-    case 0:
+    case FONA_SMS_ALL:
       mySerial->println(F("\"ALL\""));
       break;
-    case 1:
+    case FONA_SMS_UNREAD:
       mySerial->println(F("\"REC UNREAD\""));
       break;
-    case 2:
+    case FONA_SMS_READ:
       mySerial->println(F("\"REC READ\""));
       break;
   }

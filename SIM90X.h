@@ -45,8 +45,11 @@
 #define FONA_DEFAULT_TIMEOUT_MS 500
 
 #define FONA_SMS_ALL 0
-#define FONA_SMS_UNREAD 1
-#define FONA_SMS_READ 2
+#define FONA_SMS_READ 1
+#define FONA_SMS_UNREAD 2
+#define FONA_SMS_SENT 3
+#define FONA_SMS_UNSENT 4
+#define FONA_SMS_INBOX 5
 
 class SIM90X : public Stream {
  public:
@@ -102,6 +105,7 @@ class SIM90X : public Stream {
   boolean readSMS(uint8_t i, char *smsbuff, uint16_t max, uint16_t *readsize);
   boolean sendSMS(char *smsaddr, char *smsmsg);
   boolean deleteSMS(uint8_t i);
+  boolean deleteSMSs(uint8_t type);
   boolean getSMSSender(uint8_t i, char *sender, int senderlen);
   uint8_t hasSMS(uint8_t type);
 
