@@ -29,9 +29,13 @@
 #include "SIM90X.h"
 
 SIM90X::SIM90X(){
-  apn = F("SIM90X");
-  apnusername = 0;
-  apnpassword = 0;
+  apn = new char[32];
+  apnusername = new char[32];
+  apnpassword = new char[32];
+
+  //apn = F("SIM90X");
+  //apnusername = 0;
+  //apnpassword = 0;
   mySerial = 0;
   httpsredirect = false;
   useragent = F("SIM90X");
@@ -40,9 +44,9 @@ SIM90X::SIM90X(){
 SIM90X::SIM90X(int8_t rst){
   _rstpin = rst;
   
-  apn = F("SIM90X");
-  apnusername = 0;
-  apnpassword = 0;
+  //apn = F("SIM90X");
+  //apnusername = 0;
+  //apnpassword = 0;
   mySerial = 0;
   httpsredirect = false;
   useragent = F("SIM90X");
@@ -610,12 +614,23 @@ uint8_t SIM90X::GPRSstate(void) {
   return state;
 }
 
-void SIM90X::setGPRSNetworkSettings(const __FlashStringHelper *apn,
-              const __FlashStringHelper *username, const __FlashStringHelper *password) {
+void SIM90X::setGPRSNetworkSettings(char *apn, char *username, char *password){
   this->apn = apn;
   this->apnusername = username;
   this->apnpassword = password;
 }
+
+void SIM90X::setGPRSNetworkSettings(const __FlashStringHelper *apn, const __FlashStringHelper *username, const __FlashStringHelper *password){
+  strcpy_P(this->apn, (const PROGMEM char *) apn);
+  strcpy_P(this->apnusername, (const PROGMEM char *) apnusername);
+  strcpy_P(this->apnpassword, (const PROGMEM char *) apnpassword);
+}
+
+/*void SIM90X::setGPRSNetworkSettings(const __FlashStringHelper *apn, const __FlashStringHelper *username, const __FlashStringHelper *password){
+  this->apn = apn;
+  this->apnusername = username;
+  this->apnpassword = password;
+}*/
 
 boolean SIM90X::getGSMLoc(uint16_t *errorcode, char *buff, uint16_t maxlen) {
 
@@ -950,6 +965,26 @@ uint8_t SIM90X::getReplyQuoted(const __FlashStringHelper *prefix, const __FlashS
   return l;
 }
 
+uint8_t SIM90X::getReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, uint16_t timeout) {
+  flushInput();
+
+#ifdef SIM90X_DEBUG
+  Serial.print("\t---> "); Serial.print(prefix);
+  Serial.print('"'); Serial.print(suffix); Serial.println('"');
+#endif
+
+  mySerial->print(prefix);
+  mySerial->print('"');
+  mySerial->print(suffix);
+  mySerial->println('"');
+
+  uint8_t l = readline(timeout);
+#ifdef SIM90X_DEBUG
+    Serial.print ("\t<--- "); Serial.println(replybuffer);
+#endif
+  return l;
+}
+
 boolean SIM90X::sendCheckReply(char *send, char *reply, uint16_t timeout) {
   getReply(send, timeout);
 
@@ -991,6 +1026,11 @@ boolean SIM90X::sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix
 
 // Send prefix, ", suffix, ", and newline.  Verify FONA response matches reply parameter.
 boolean SIM90X::sendCheckReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, const __FlashStringHelper *reply, uint16_t timeout) {
+  getReplyQuoted(prefix, suffix, timeout);
+  return (strcmp_P(replybuffer, (prog_char*)reply) == 0);
+}
+
+boolean SIM90X::sendCheckReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, const __FlashStringHelper *reply, uint16_t timeout) {
   getReplyQuoted(prefix, suffix, timeout);
   return (strcmp_P(replybuffer, (prog_char*)reply) == 0);
 }

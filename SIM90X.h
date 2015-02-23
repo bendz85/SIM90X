@@ -114,7 +114,7 @@ class SIM90X : public Stream {
   boolean enableGPRS(boolean onoff);
   uint8_t GPRSstate(void);
   boolean getGSMLoc(uint16_t *replycode, char *buff, uint16_t maxlen);
-  //void setGPRSNetworkSettings(const char *apn, const char *username = 0, const char *password = 0);
+  void setGPRSNetworkSettings(char *apn, char *username = 0, char *password = 0);
   void setGPRSNetworkSettings(const __FlashStringHelper *apn, const __FlashStringHelper *username=0, const __FlashStringHelper *password=0);
 
   // HTTP 
@@ -138,9 +138,13 @@ class SIM90X : public Stream {
   int8_t _rstpin;
 
   char replybuffer[255];
-  const __FlashStringHelper *apn;
-  const __FlashStringHelper *apnusername;
-  const __FlashStringHelper *apnpassword;
+  //const __FlashStringHelper *apn;
+  //const __FlashStringHelper *apnusername;
+  //const __FlashStringHelper *apnpassword;
+  char *apn;
+  char *apnusername;
+  char *apnpassword;
+
   boolean httpsredirect;
   const __FlashStringHelper *useragent;
 
@@ -158,6 +162,7 @@ class SIM90X : public Stream {
   uint8_t getReply(const __FlashStringHelper *prefix, int32_t suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   uint8_t getReply(const __FlashStringHelper *prefix, int32_t suffix1, int32_t suffix2, uint16_t timeout); // Don't set default value or else function call is ambiguous.
   uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
 
   boolean sendCheckReply(char *send, char *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(const __FlashStringHelper *send, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
@@ -165,18 +170,13 @@ class SIM90X : public Stream {
   boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, int32_t suffix2, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
 
+  boolean parseReply(const __FlashStringHelper *toreply, uint16_t *v, char divider  = ',', uint8_t index=0);
+  boolean parseReply(const __FlashStringHelper *toreply, char *v, char divider  = ',', uint8_t index=0);
+  boolean parseReplyQuoted(const __FlashStringHelper *toreply, char *v, int maxlen, char divider, uint8_t index);
 
-  boolean parseReply(const __FlashStringHelper *toreply,
-          uint16_t *v, char divider  = ',', uint8_t index=0);
-  boolean parseReply(const __FlashStringHelper *toreply,
-          char *v, char divider  = ',', uint8_t index=0);
-  boolean parseReplyQuoted(const __FlashStringHelper *toreply,
-          char *v, int maxlen, char divider, uint8_t index);
-
-  boolean sendParseReply(const __FlashStringHelper *tosend,
-       const __FlashStringHelper *toreply,
-       uint16_t *v, char divider = ',', uint8_t index=0);
+  boolean sendParseReply(const __FlashStringHelper *tosend, const __FlashStringHelper *toreply, uint16_t *v, char divider = ',', uint8_t index=0);
 
   static boolean _incomingCall;
   static void onIncomingCall();
