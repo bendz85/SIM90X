@@ -23,7 +23,7 @@
 	#include <NewSoftSerial.h>
 #endif
 
-#define SIM90X_DEBUG
+// #define SIM90X_DEBUG
 
 #define FONA_HEADSETAUDIO 0
 #define FONA_EXTAUDIO 1
@@ -103,7 +103,7 @@ class SIM90X : public Stream {
   boolean sendSMS(char *smsaddr, char *smsmsg);
   boolean deleteSMS(uint8_t i);
   boolean getSMSSender(uint8_t i, char *sender, int senderlen);
-  uint8_t hasSMS(uint8_t type, uint8_t *addr);
+  uint8_t hasSMS(uint8_t type);
 
   // Time
   boolean enableNetworkTimeSync(boolean onoff);

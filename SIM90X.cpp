@@ -76,7 +76,7 @@ boolean SIM90X::begin(Stream &port) {
   sendCheckReply(F("ATE0"), F("OK"));
   delay(100);
 
-  if (! sendCheckReply(F("ATE0"), F("OK"))) {
+  if(!sendCheckReply(F("ATE0"), F("OK"))){
     return false;
   }
 
@@ -461,7 +461,7 @@ boolean SIM90X::deleteSMS(uint8_t i) {
   return sendCheckReply(sendbuff, "OK", 2000);
 }
 
-uint8_t SIM90X::hasSMS(uint8_t type, uint8_t *addr){
+uint8_t SIM90X::hasSMS(uint8_t type){
   uint8_t i = 0;
   boolean status;
 
@@ -478,15 +478,10 @@ uint8_t SIM90X::hasSMS(uint8_t type, uint8_t *addr){
       break;
   }
 
-  do{
-    char buffer[8] = {0};
-    readline(FONA_DEFAULT_TIMEOUT_MS);
-    if((status = parseReplyQuoted(F("+CMGL:"), buffer, 8, ',', 0))){
-      addr[i] = (uint8_t)atoi(buffer);
-      i++;
-      readline(); // eat this line;
-    }
-  }while(status);
+  readline();
+  if(parseReplyQuoted(F("+CMGL:"), replybuffer, 8, ',', 0)){
+    i = atoi(replybuffer);
+  }
 
   // Drop any remaining data from the response.
   flushInput();
@@ -746,8 +741,8 @@ boolean SIM90X::HTTP_response(uint16_t *status, uint16_t *datalen) {
   if (! parseReply(F("+HTTPACTION:"), datalen, ',', 2))
     return false;
 
-  Serial.print("Status: "); Serial.println(*status);
-  Serial.print("Len: "); Serial.println(*datalen);
+  //Serial.print("Status: "); Serial.println(*status);
+  //Serial.print("Len: "); Serial.println(*datalen);
 
   // Read response
   getReply(F("AT+HTTPREAD"));
