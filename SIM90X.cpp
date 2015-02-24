@@ -540,37 +540,6 @@ boolean SIM90X::enableNetworkTimeSync(boolean onoff) {
   return true;
 }
 
-boolean SIM90X::enableNTPTimeSync(boolean onoff, const __FlashStringHelper *ntpserver) {
-  if (onoff) {
-    if (! sendCheckReply(F("AT+CNTPCID=1"), F("OK")))
-      return false;
-
-    mySerial->print(F("AT+CNTP=\""));
-    if (ntpserver != 0) {
-      mySerial->print(ntpserver);
-    } else {
-      mySerial->print(F("pool.ntp.org"));
-    }
-    mySerial->println(F("\",0"));
-    readline(FONA_DEFAULT_TIMEOUT_MS);
-    if (strcmp(replybuffer, "OK") != 0)
-      return false;
-
-    if (! sendCheckReply(F("AT+CNTP"), F("OK"), 10000))
-      return false;
-
-    uint16_t status;
-    readline(10000);
-    if (! parseReply(F("+CNTP:"), &status))
-      return false;
-  } else {
-    if (! sendCheckReply(F("AT+CNTPCID=0"), F("OK")))
-      return false;
-  }
-
-  return true;
-}
-
 boolean SIM90X::getTime(char *buff, uint16_t maxlen) {
   getReply(F("AT+CCLK?"), (uint16_t) 10000);
   if (strncmp(replybuffer, "+CCLK: ", 7) != 0)
@@ -663,22 +632,6 @@ void SIM90X::setGPRSNetworkSettings(const __FlashStringHelper *apn, const __Flas
   this->apnusername = username;
   this->apnpassword = password;
 }*/
-
-boolean SIM90X::getGSMLoc(uint16_t *errorcode, char *buff, uint16_t maxlen) {
-
-  getReply(F("AT+CIPGSMLOC=1,1"), (uint16_t)10000);
-
-  if (! parseReply(F("+CIPGSMLOC: "), errorcode))
-    return false;
-
-  char *p = replybuffer+14;
-  uint16_t lentocopy = min(maxlen-1, strlen(p));
-  strncpy(buff, p, lentocopy+1);
-
-  readline(); // eat OK
-
-  return true;
-}
 
 boolean SIM90X::HTTP_GET_start(char *url, uint16_t *status, uint16_t *datalen){
   if (! HTTP_initialize(url))

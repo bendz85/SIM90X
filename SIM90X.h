@@ -111,13 +111,11 @@ class SIM90X : public Stream {
 
   // Time
   boolean enableNetworkTimeSync(boolean onoff);
-  boolean enableNTPTimeSync(boolean onoff, const __FlashStringHelper *ntpserver=0);
   boolean getTime(char *buff, uint16_t maxlen);
 
   // GPRS handling
   boolean enableGPRS(boolean onoff);
   uint8_t GPRSstate(void);
-  boolean getGSMLoc(uint16_t *replycode, char *buff, uint16_t maxlen);
   void setGPRSNetworkSettings(char *apn, char *username = 0, char *password = 0);
   void setGPRSNetworkSettings(const __FlashStringHelper *apn, const __FlashStringHelper *username=0, const __FlashStringHelper *password=0);
 
