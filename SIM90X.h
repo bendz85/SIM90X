@@ -25,31 +25,31 @@
 
 // #define SIM90X_DEBUG
 
-#define FONA_HEADSETAUDIO 0
-#define FONA_EXTAUDIO 1
+#define SIM90X_HEADSETAUDIO 0
+#define SIM90X_EXTAUDIO 1
 
-#define FONA_STTONE_DIALTONE 1
-#define FONA_STTONE_BUSY 2
-#define FONA_STTONE_CONGESTION 3
-#define FONA_STTONE_PATHACK 4
-#define FONA_STTONE_DROPPED 5
-#define FONA_STTONE_ERROR 6
-#define FONA_STTONE_CALLWAIT 7
-#define FONA_STTONE_RINGING 8
-#define FONA_STTONE_BEEP 16
-#define FONA_STTONE_POSTONE 17
-#define FONA_STTONE_ERRTONE 18
-#define FONA_STTONE_INDIANDIALTONE 19
-#define FONA_STTONE_USADIALTONE 20
+#define SIM90X_STTONE_DIALTONE 1
+#define SIM90X_STTONE_BUSY 2
+#define SIM90X_STTONE_CONGESTION 3
+#define SIM90X_STTONE_PATHACK 4
+#define SIM90X_STTONE_DROPPED 5
+#define SIM90X_STTONE_ERROR 6
+#define SIM90X_STTONE_CALLWAIT 7
+#define SIM90X_STTONE_RINGING 8
+#define SIM90X_STTONE_BEEP 16
+#define SIM90X_STTONE_POSTONE 17
+#define SIM90X_STTONE_ERRTONE 18
+#define SIM90X_STTONE_INDIANDIALTONE 19
+#define SIM90X_STTONE_USADIALTONE 20
 
-#define FONA_DEFAULT_TIMEOUT_MS 500
+#define SIM90X_DEFAULT_TIMEOUT_MS 500
 
-#define FONA_SMS_ALL 0
-#define FONA_SMS_READ 1
-#define FONA_SMS_UNREAD 2
-#define FONA_SMS_SENT 3
-#define FONA_SMS_UNSENT 4
-#define FONA_SMS_INBOX 5
+#define SIM90X_SMS_ALL 0
+#define SIM90X_SMS_READ 1
+#define SIM90X_SMS_UNREAD 2
+#define SIM90X_SMS_SENT 3
+#define SIM90X_SMS_UNSENT 4
+#define SIM90X_SMS_INBOX 5
 
 class SIM90X : public Stream {
  public:
@@ -65,7 +65,7 @@ class SIM90X : public Stream {
   void flush();
 
   // Raw
-  void AT(char *cmd, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  void AT(char *cmd, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
 
   // RTC
   boolean enableRTC(uint8_t i);
@@ -157,22 +157,22 @@ class SIM90X : public Stream {
 
   void flushInput();
   uint16_t readRaw(uint16_t b);
-  uint8_t readline(uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS, boolean multiline = false);
-  uint8_t getReply(char *send, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  uint8_t getReply(const __FlashStringHelper *send, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  uint8_t getReply(const __FlashStringHelper *prefix, char *suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  uint8_t getReply(const __FlashStringHelper *prefix, int32_t suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  uint8_t readline(uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS, boolean multiline = false);
+  uint8_t getReply(char *send, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  uint8_t getReply(const __FlashStringHelper *send, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  uint8_t getReply(const __FlashStringHelper *prefix, char *suffix, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  uint8_t getReply(const __FlashStringHelper *prefix, int32_t suffix, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
   uint8_t getReply(const __FlashStringHelper *prefix, int32_t suffix1, int32_t suffix2, uint16_t timeout); // Don't set default value or else function call is ambiguous.
-  uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
 
-  boolean sendCheckReply(char *send, char *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  boolean sendCheckReply(const __FlashStringHelper *send, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  boolean sendCheckReply(const __FlashStringHelper *prefix, char *suffix, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, int32_t suffix2, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  boolean sendCheckReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
-  boolean sendCheckReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, const __FlashStringHelper *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReply(char *send, char *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReply(const __FlashStringHelper *send, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReply(const __FlashStringHelper *prefix, char *suffix, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, int32_t suffix2, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
 
   boolean parseReply(const __FlashStringHelper *toreply, uint16_t *v, char divider  = ',', uint8_t index=0);
   boolean parseReply(const __FlashStringHelper *toreply, char *v, char divider  = ',', uint8_t index=0);

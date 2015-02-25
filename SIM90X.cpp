@@ -431,8 +431,8 @@ boolean SIM90X::sendSMS(char *smsaddr, char *smsmsg) {
 #ifdef SIM90X_DEBUG
   Serial.print("> "); Serial.println(smsmsg);
 #endif
-  mySerial->println(smsmsg);
-  mySerial->println();
+  mySerial->print(smsmsg);
+  //mySerial->println();
   mySerial->write(0x1A);
 #ifdef SIM90X_DEBUG
   Serial.println("^Z");
@@ -472,22 +472,22 @@ boolean SIM90X::deleteSMSs(uint8_t type){
   char buffer[22];
 
   switch(type){
-    case FONA_SMS_ALL:
+    case SIM90X_SMS_ALL:
       strcpy_P(t, PSTR("\"DEL ALL\""));
       break;
-    case FONA_SMS_READ:
+    case SIM90X_SMS_READ:
       strcpy_P(t, PSTR("\"DEL READ\""));
       break;
-    case FONA_SMS_UNREAD:
+    case SIM90X_SMS_UNREAD:
       strcpy_P(t, PSTR("\"DEL UNREAD\""));
       break;
-    case FONA_SMS_SENT:
+    case SIM90X_SMS_SENT:
       strcpy_P(t, PSTR("\"DEL SENT\""));
       break;
-    case FONA_SMS_UNSENT:
+    case SIM90X_SMS_UNSENT:
       strcpy_P(t, PSTR("\"DEL UNSENT\""));
       break;
-    case FONA_SMS_INBOX:
+    case SIM90X_SMS_INBOX:
       strcpy_P(t, PSTR("\"DEL INBOX\""));
       break;
   }
@@ -503,13 +503,13 @@ uint8_t SIM90X::hasSMS(uint8_t type){
 
   mySerial->print(F("AT+CMGL="));
   switch(type){
-    case FONA_SMS_ALL:
+    case SIM90X_SMS_ALL:
       mySerial->println(F("\"ALL\""));
       break;
-    case FONA_SMS_UNREAD:
+    case SIM90X_SMS_UNREAD:
       mySerial->println(F("\"REC UNREAD\""));
       break;
-    case FONA_SMS_READ:
+    case SIM90X_SMS_READ:
       mySerial->println(F("\"REC READ\""));
       break;
   }
@@ -667,7 +667,7 @@ boolean SIM90X::HTTP_POST_start(char *url,
   mySerial->print(F("AT+HTTPDATA="));
   mySerial->print(postdatalen);
   mySerial->println(",10000");
-  readline(FONA_DEFAULT_TIMEOUT_MS);
+  readline(SIM90X_DEFAULT_TIMEOUT_MS);
   if (strcmp(replybuffer, "DOWNLOAD") != 0)
     return false;
 
@@ -716,7 +716,7 @@ boolean SIM90X::HTTP_initialize(char *url) {
   mySerial->print(F("AT+HTTPPARA=\"URL\",\""));
   mySerial->print(url);
   mySerial->println("\"");
-  readline(FONA_DEFAULT_TIMEOUT_MS);
+  readline(SIM90X_DEFAULT_TIMEOUT_MS);
   if (strcmp(replybuffer, "OK") != 0)
     return false;
 
