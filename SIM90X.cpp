@@ -15,7 +15,7 @@
   BSD license, all text above must be included in any redistribution
  ****************************************************/
 #include <avr/pgmspace.h>
-    // next line per http://postwarrior.com/arduino-ethershield-error-prog_char-does-not-name-a-type/
+  // next line per http://postwarrior.com/arduino-ethershield-error-prog_char-does-not-name-a-type/
 #define prog_char  char PROGMEM
 
 #if (ARDUINO >= 100)
@@ -33,9 +33,6 @@ SIM90X::SIM90X(){
   apnusername = new char[32];
   apnpassword = new char[32];
 
-  //apn = F("SIM90X");
-  //apnusername = 0;
-  //apnpassword = 0;
   mySerial = 0;
   httpsredirect = false;
   useragent = F("SIM90X");
@@ -44,9 +41,6 @@ SIM90X::SIM90X(){
 SIM90X::SIM90X(int8_t rst){
   _rstpin = rst;
   
-  //apn = F("SIM90X");
-  //apnusername = 0;
-  //apnpassword = 0;
   mySerial = 0;
   httpsredirect = false;
   useragent = F("SIM90X");
@@ -466,7 +460,7 @@ boolean SIM90X::deleteSMS(uint8_t i) {
 }
 
 boolean SIM90X::deleteSMSs(uint8_t type){
-  if (! sendCheckReply("AT+CMGF=1", "OK")) return -1;
+  if (!sendCheckReply("AT+CMGF=1", "OK")) return -1;
   
   char t[14];
   char buffer[22];
