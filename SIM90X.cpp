@@ -121,8 +121,7 @@ boolean SIM90X::getADCVoltage(uint16_t *v) {
 
 /********* SIM ***********************************************************/
 
-uint8_t SIM90X::unlockSIM(char *pin)
-{
+uint8_t SIM90X::unlockSIM(char *pin) {
   char sendbuff[14] = "AT+CPIN=";
   sendbuff[8] = pin[0];
   sendbuff[9] = pin[1];
@@ -276,8 +275,7 @@ boolean SIM90X::callPhone(char *number) {
   uint8_t x = strlen(sendbuff);
   sendbuff[x] = ';';
   sendbuff[x+1] = 0;
-  //Serial.println(sendbuff);
-
+  
   return sendCheckReply(sendbuff, "OK");
 }
 

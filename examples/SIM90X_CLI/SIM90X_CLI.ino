@@ -1,34 +1,28 @@
-/*************************************************** 
-  This is an example for our Adafruit FONA Cellular Module
-
-  Designed specifically to work with the Adafruit FONA 
-  ----> http://www.adafruit.com/products/1946
-  ----> http://www.adafruit.com/products/1963
+/*************************************************************************
+  This is an example for our SIM90X Arduino library
 
   These displays use TTL Serial to communicate, 2 pins are required to 
   interface
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
+  
+  This library is based on Adafruit FONA library written by Limor 
+  Fried/Ladyada for Adafruit Industries.  
   BSD license, all text above must be included in any redistribution
- ****************************************************/
+ ************************************************************************/
 
-/* 
-THIS CODE IS STILL IN PROGRESS!
+/*************************************************************************
+ THIS CODE IS STILL IN PROGRESS!
 
-Open up the serial console on the Arduino at 115200 baud to interact with FONA
+ Open up the serial console on the Arduino at 115200 baud to interact 
+ with SIM90X
 
-Note that if you need to set a GPRS APN, username, and password scroll down to
-the commented section below at the end of the setup() function.
-
-*/
+ Note that if you need to set a GPRS APN, username, and password scroll 
+ down to the commented section below at the end of the setup() function.
+ ************************************************************************/
 
 #include <SoftwareSerial.h>
 #include <SIM90X.h>
 
-#define FONA_RST 4
+// #define SIM90X_RST 4
 
 // this is a large buffer for replies
 char replybuffer[255];
@@ -36,12 +30,13 @@ char replybuffer[255];
 // or comment this out & use a hardware serial port like Serial1 (see below)
 SoftwareSerial simSS = SoftwareSerial(7, 8);
 
-SIM90X sim = SIM90X(FONA_RST);
+//SIM90X sim = SIM90X(SIM90X_RST);
+SIM90X sim = SIM90X();
 
 uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout = 0);
 
 void setup() {
-  while (!Serial);
+  while(!Serial);
 
   Serial.begin(115200);
   Serial.println(F("SIM90X CLI"));
@@ -50,10 +45,10 @@ void setup() {
   // make it slow so its easy to read!
   simSS.begin(9600); // if you're using software serial
 
-  // See if the FONA is responding
+  // See if the SIM90X is responding
   if(!sim.begin(simSS)){           // can also try sim.begin(Serial1) 
     Serial.println(F("Couldn't find SIM90X"));
-    while (1);
+    while(1);
   }
   Serial.println(F("SIM90X is OK"));
 
@@ -79,49 +74,34 @@ void setup() {
   printMenu();
 }
 
-void printMenu(void) {
-   Serial.println(F("-------------------------------------"));
-   Serial.println(F("[?] Print this menu"));
-   Serial.println(F("[a] read the ADC (2.8V max)"));
-   Serial.println(F("[b] read the Battery V and % charged"));
-   Serial.println(F("[C] read the SIM CCID"));
-   Serial.println(F("[U] Unlock SIM with PIN code"));
-   Serial.println(F("[i] read RSSI"));
-   Serial.println(F("[n] get Network status"));
-   Serial.println(F("[v] set audio Volume"));
-   Serial.println(F("[V] get Volume"));
-   Serial.println(F("[H] set Headphone audio"));
-   Serial.println(F("[e] set External audio"));
-   Serial.println(F("[T] play audio Tone"));
-   Serial.println(F("[c] make phone Call"));
-   Serial.println(F("[h] Hang up phone"));
-   Serial.println(F("[p] Pick up phone"));
-   Serial.println(F("[N] Number of SMSs"));
-   Serial.println(F("[r] Read SMS #"));
-   Serial.println(F("[R] Read All SMS"));
-   Serial.println(F("[d] Delete SMS #"));
-   Serial.println(F("[s] Send SMS"));
-   Serial.println(F("[y] Enable network time sync"));   
-   Serial.println(F("[Y] Enable NTP time sync (GPRS)"));   
-   Serial.println(F("[t] Get network time"));   
-   Serial.println(F("[G] Enable GPRS"));
-   Serial.println(F("[g] Disable GPRS"));
-   Serial.println(F("[I] Enable GPRS"));
-   Serial.println(F("[l] Query GSMLOC (GPRS)"));
-   Serial.println(F("[w] Read webpage (GPRS)"));
-   Serial.println(F("[W] Post to website (GPRS)"));
-   Serial.println(F("[S] create Serial passthru tunnel"));
-   Serial.println(F("-------------------------------------"));
-   Serial.println(F(""));
-  
+void printMenu(void){
+  Serial.println(F("+-------------------------------------------------------------------------+"));
+  Serial.println(F("| SIM90X CLI                                                              |"));
+  Serial.println(F("|                                                                         |"));
+  Serial.println(F("| print this menu...............[?]    read the ADC (2.8V max)........[a] |"));
+  Serial.println(F("| read Battery V and % charged..[b]    read the SIM CCID..............[C] |"));
+  Serial.println(F("| Unlock SIM with PIN code......[U]    read RSSI......................[i] |"));
+  Serial.println(F("| get Network status............[n]    set audio Volume...............[v] |"));
+  Serial.println(F("| get Volume....................[V]    set Headphone audio............[H] |"));
+  Serial.println(F("| set External audio ...........[e]    play audio Tone................[T] |"));
+  Serial.println(F("| make phone Call ..............[c]    Hang up phone..................[h] |"));
+  Serial.println(F("| Pick up phone.................[p]    get Number of SMSs.............[N] |"));
+  Serial.println(F("| Read SMS......................[r]    Read All SMS...................[R] |"));
+  Serial.println(F("| Delete SMS....................[d]    Send SMS.......................[s] |"));
+  Serial.println(F("| Enable network time sync......[y]    Get network time...............[t] |"));
+  Serial.println(F("| Enable GPRS...................[G]    Disable GPRS...................[g] |"));
+  Serial.println(F("| Get GPRS status...............[I]    Read webpage (GPRS)............[w] |"));
+  Serial.println(F("| Post to website (GPRS)........[W]    create Serial passthru tunnel..[S] |"));
+  Serial.println(F("|                                                                         |"));
+  Serial.println(F("+-------------------------------------------------------------------------+"));
 }
+
 void loop() {
   Serial.print(F("SIM90X> "));
   while (! Serial.available() );
   
   char command = Serial.read();
   Serial.println(command);
-  
   
   switch (command) {
     case '?': {
@@ -238,23 +218,23 @@ void loop() {
     
     case 'H': {
       // Set Headphone output
-      if (! sim.setAudio(FONA_HEADSETAUDIO)) {
+      if (! sim.setAudio(SIM90X_HEADSETAUDIO)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
       }
-      sim.setMicVolume(FONA_HEADSETAUDIO, 15);
+      sim.setMicVolume(SIM90X_HEADSETAUDIO, 15);
       break;
     }
     case 'e': {
       // Set External output
-      if (! sim.setAudio(FONA_EXTAUDIO)) {
+      if (! sim.setAudio(SIM90X_EXTAUDIO)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
       }
 
-      sim.setMicVolume(FONA_EXTAUDIO, 10);
+      sim.setMicVolume(SIM90X_EXTAUDIO, 10);
       break;
     }
 
@@ -419,13 +399,6 @@ void loop() {
       break;
     }
 
-    case 'Y': {
-      // enable NTP time sync
-      if (!sim.enableNTPTimeSync(true, F("pool.ntp.org")))
-        Serial.println(F("Failed to enable"));
-      break;
-    }
-
     case 't': {
         // read the time
         char buffer[23];
@@ -454,20 +427,6 @@ void loop() {
       Serial.print(F("GPRS State: "));
       Serial.println(sim.GPRSstate());
       break;
-    }
-    case 'l': {
-       // check for GSMLOC (requires GPRS)
-       uint16_t returncode;
-       
-       if (!sim.getGSMLoc(&returncode, replybuffer, 250))
-         Serial.println(F("Failed!"));
-       if (returncode == 0) {
-         Serial.println(replybuffer);
-       } else {
-         Serial.print(F("Fail code #")); Serial.println(returncode);
-       }
-       
-       break;
     }
     case 'w': {
       // read website URL
