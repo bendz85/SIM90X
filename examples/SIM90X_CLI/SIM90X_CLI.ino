@@ -100,8 +100,8 @@ void printMenu(void){
 void loop() {
   Serial.print(F("SIM90X> "));
   while(!Serial.available()){
-    if(fona.available()){
-      Serial.write(fona.read());
+    if(sim.available()){
+      Serial.write(sim.read());
     }
   }
   
@@ -266,7 +266,7 @@ void loop() {
       Serial.print(F("PWM Freq, 0 = Off, (1-2000): "));
       uint16_t freq= readnumber();
       Serial.println();
-      if (! fona.setPWM(freq)) {
+      if (!sim.setPWM(freq)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
