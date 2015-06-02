@@ -20,7 +20,9 @@
 
 #if (ARDUINO >= 100)
   #include "Arduino.h"
-  #include <SoftwareSerial.h>
+  #ifndef __SAM3X8E__  // Arduino Due doesn't support SoftwareSerial
+    #include <SoftwareSerial.h>
+  #endif
 #else
   #include "WProgram.h"
   #include <NewSoftSerial.h>
@@ -256,6 +258,14 @@ boolean SIM90X::setVolume(uint8_t i) {
   return sendCheckReply(F("AT+CLVL="), i, F("OK"));
 }
 
+boolean SIM90X::playDTMF(char dtmf) {
+  char str[4];
+  str[0] = '\"';
+  str[1] = dtmf;
+  str[2] = '\"';
+  str[3] = 0;
+  return sendCheckReply(F("AT+CLDTMF=3,"), str, F("OK"));
+}
 
 boolean SIM90X::playToolkitTone(uint8_t t, uint16_t len) {
   return sendCheckReply(F("AT+STTONE=1,"), t, len, F("OK"));
@@ -266,6 +276,15 @@ boolean SIM90X::setMicVolume(uint8_t a, uint8_t level) {
   if (a > 1) return false;
 
   return sendCheckReply(F("AT+CMIC="), a, level, F("OK"));
+}
+
+/********* PWM/BUZZER **************************************************/
+
+boolean SIM90X::setPWM(uint16_t period, uint8_t duty) {
+  if (period > 2000) return false;
+  if (duty > 100) return false;
+
+  return sendCheckReply(F("AT+SPWM=0,"), period, duty, F("OK"));
 }
 
 /********* CALL PHONES **************************************************/

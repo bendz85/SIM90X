@@ -16,11 +16,13 @@
  ****************************************************/
 
 #if (ARDUINO >= 100)
-  #include "Arduino.h"
-	#include <SoftwareSerial.h>
+    #include "Arduino.h"
+    #ifndef __SAM3X8E__  // Arduino Due doesn't support SoftwareSerial
+        #include <SoftwareSerial.h>
+    #endif
 #else
-	#include "WProgram.h"
-	#include <NewSoftSerial.h>
+    #include "WProgram.h"
+    #include <NewSoftSerial.h>
 #endif
 
 // #define SIM90X_DEBUG
@@ -97,6 +99,7 @@ class SIM90X : public Stream {
     uint8_t getVolume(void);
     boolean playToolkitTone(uint8_t t, uint16_t len);
     boolean setMicVolume(uint8_t a, uint8_t level);
+    boolean playDTMF(char tone);
 
     // SMS handling
     boolean setSMSInterrupt(uint8_t i);
@@ -128,6 +131,9 @@ class SIM90X : public Stream {
 
     // HTTPS
     void setHTTPSRedirect(boolean onoff);
+
+    // PWM (buzzer)
+    boolean setPWM(uint16_t period, uint8_t duty = 50);
 
     // Phone calls
     boolean callPhone(char *phonenum);

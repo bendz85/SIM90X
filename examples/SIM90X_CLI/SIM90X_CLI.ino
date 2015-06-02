@@ -1,8 +1,8 @@
 /*************************************************************************
   This is an example for our SIM90X Arduino library
 
-  These displays use TTL Serial to communicate, 2 pins are required to 
-  interface
+  These cellular modules use TTL Serial to communicate, 2 pins are required 
+  to interface
   
   This library is based on Adafruit FONA library written by Limor 
   Fried/Ladyada for Adafruit Industries.  
@@ -84,6 +84,7 @@ void printMenu(void){
   Serial.println(F("| get Network status............[n]    set audio Volume...............[v] |"));
   Serial.println(F("| get Volume....................[V]    set Headphone audio............[H] |"));
   Serial.println(F("| set External audio ...........[e]    play audio Tone................[T] |"));
+  Serial.println(F("|                                      PWM/Buzzer out.................[P] |"));
   Serial.println(F("| make phone Call ..............[c]    Hang up phone..................[h] |"));
   Serial.println(F("| Pick up phone.................[p]    get Number of SMSs.............[N] |"));
   Serial.println(F("| Read SMS......................[r]    Read All SMS...................[R] |"));
@@ -98,7 +99,11 @@ void printMenu(void){
 
 void loop() {
   Serial.print(F("SIM90X> "));
-  while (! Serial.available() );
+  while(!Serial.available()){
+    if(fona.available()){
+      Serial.write(fona.read());
+    }
+  }
   
   char command = Serial.read();
   Serial.println(command);
@@ -246,6 +251,22 @@ void loop() {
       Serial.println();
       // play for 1 second (1000 ms)
       if (! sim.playToolkitTone(kittone, 1000)) {
+        Serial.println(F("Failed"));
+      } else {
+        Serial.println(F("OK!"));
+      }
+      break;
+    }
+
+    /*** PWM ***/
+
+    case 'P': {
+      // PWM Buzzer output @ 2KHz max
+      flushSerial();
+      Serial.print(F("PWM Freq, 0 = Off, (1-2000): "));
+      uint16_t freq= readnumber();
+      Serial.println();
+      if (! fona.setPWM(freq)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
