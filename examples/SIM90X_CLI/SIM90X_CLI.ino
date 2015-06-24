@@ -1,62 +1,71 @@
-/*************************************************************************
-  This is an example for our SIM90X Arduino library
+/*************************************************** 
+  This is an example for our Adafruit FONA Cellular Module
 
-  These cellular modules use TTL Serial to communicate, 2 pins are required 
-  to interface
-  
-  This library is based on Adafruit FONA library written by Limor 
-  Fried/Ladyada for Adafruit Industries.  
+  Designed specifically to work with the Adafruit FONA 
+  ----> http://www.adafruit.com/products/1946
+  ----> http://www.adafruit.com/products/1963
+  ----> http://www.adafruit.com/products/2468
+  ----> http://www.adafruit.com/products/2542
+
+  These cellular modules use TTL Serial to communicate, 2 pins are 
+  required to interface
+  Adafruit invests time and resources providing this open source code, 
+  please support Adafruit and open-source hardware by purchasing 
+  products from Adafruit!
+
+  Written by Limor Fried/Ladyada for Adafruit Industries.  
   BSD license, all text above must be included in any redistribution
- ************************************************************************/
+ ****************************************************/
 
-/*************************************************************************
- THIS CODE IS STILL IN PROGRESS!
+/* 
+THIS CODE IS STILL IN PROGRESS!
 
- Open up the serial console on the Arduino at 115200 baud to interact 
- with SIM90X
+Open up the serial console on the Arduino at 115200 baud to interact with FONA
 
- Note that if you need to set a GPRS APN, username, and password scroll 
- down to the commented section below at the end of the setup() function.
- ************************************************************************/
+Note that if you need to set a GPRS APN, username, and password scroll down to
+the commented section below at the end of the setup() function.
+*/
 
 #include <SoftwareSerial.h>
 #include <SIM90X.h>
 
+#define SIM90X_TX 7
+#define SIM90X_RX 8
 // #define SIM90X_RST 4
 
 // this is a large buffer for replies
 char replybuffer[255];
 
 // or comment this out & use a hardware serial port like Serial1 (see below)
-SoftwareSerial simSS = SoftwareSerial(7, 8);
+SoftwareSerial fonaSS = SoftwareSerial(SIM90X_TX, SIM90X_RX);
 
-//SIM90X sim = SIM90X(SIM90X_RST);
-SIM90X sim = SIM90X();
+SIM90X fona = SIM90X();
 
 uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout = 0);
 
 void setup() {
-  while(!Serial);
+  while (!Serial);
 
   Serial.begin(115200);
-  Serial.println(F("SIM90X CLI"));
+  Serial.println(F("SIM90X basic test"));
   Serial.println(F("Initializing....(May take 3 seconds)"));
 
   // make it slow so its easy to read!
-  simSS.begin(9600); // if you're using software serial
+  fonaSS.begin(9600); // if you're using software serial
+  //Serial1.begin(4800); // if you're using hardware serial
 
-  // See if the SIM90X is responding
-  if(!sim.begin(simSS)){           // can also try sim.begin(Serial1) 
+  // See if the FONA is responding
+  if (! fona.begin(fonaSS)) {           // can also try fona.begin(Serial1) 
     Serial.println(F("Couldn't find SIM90X"));
-    while(1);
+    while (1);
   }
   Serial.println(F("SIM90X is OK"));
 
   // Print SIM card IMEI number.
   char imei[15] = {0}; // MUST use a 16 character buffer for IMEI!
-  uint8_t imeiLen = sim.getIMEI(imei);
+  uint8_t imeiLen = fona.getIMEI(imei);
   if (imeiLen > 0) {
-    Serial.print("SIM card IMEI: "); Serial.println(imei);
+    Serial.print(F("SIM card IMEI: ")); Serial.println(imei);
   }
 
   // Optionally configure a GPRS APN, username, and password.
@@ -64,14 +73,17 @@ void setup() {
   // network.  Contact your provider for the exact APN, username,
   // and password values.  Username and password are optional and
   // can be removed, but APN is required.
-  sim.setGPRSNetworkSettings(F("mobile.vodafone.it"));
+  fona.setGPRSNetworkSettings(F("mobile.vodafone.it"));
 
   // Optionally configure HTTP gets to follow redirects over SSL.
   // Default is not to follow SSL redirects, however if you uncomment
   // the following line then redirects over SSL will be followed.
-  //sim.setHTTPSRedirect(true);
+  //fona.setHTTPSRedirect(true);
 
   printMenu();
+
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
 }
 
 void printMenu(void){
@@ -84,12 +96,15 @@ void printMenu(void){
   Serial.println(F("| get Network status............[n]    set audio Volume...............[v] |"));
   Serial.println(F("| get Volume....................[V]    set Headphone audio............[H] |"));
   Serial.println(F("| set External audio ...........[e]    play audio Tone................[T] |"));
-  Serial.println(F("|                                      PWM/Buzzer out.................[P] |"));
-  Serial.println(F("| make phone Call ..............[c]    Hang up phone..................[h] |"));
-  Serial.println(F("| Pick up phone.................[p]    get Number of SMSs.............[N] |"));
-  Serial.println(F("| Read SMS......................[r]    Read All SMS...................[R] |"));
+  Serial.println(F("| PWM/Buzzer out................[P]    make phone Call ...............[c] |"));
+  Serial.println(F("| Hang up phone.................[h]    Pick up phone..................[p] |"));
+  // SMS
+  Serial.println(F("| get Number of SMSs............[N]    Read SMS.......................[r] |"));
+  Serial.println(F("| Read All SMS..................[R]    Delete all SMS.................[D] |"));
   Serial.println(F("| Delete SMS....................[d]    Send SMS.......................[s] |"));
+  // Time
   Serial.println(F("| Enable network time sync......[y]    Get network time...............[t] |"));
+  // GPRS
   Serial.println(F("| Enable GPRS...................[G]    Disable GPRS...................[g] |"));
   Serial.println(F("| Get GPRS status...............[I]    Read webpage (GPRS)............[w] |"));
   Serial.println(F("| Post to website (GPRS)........[W]    create Serial passthru tunnel..[S] |"));
@@ -99,9 +114,9 @@ void printMenu(void){
 
 void loop() {
   Serial.print(F("SIM90X> "));
-  while(!Serial.available()){
-    if(sim.available()){
-      Serial.write(sim.read());
+  while (! Serial.available() ) {
+    if (fona.available()) {
+        Serial.write(fona.read());
     }
   }
   
@@ -117,7 +132,7 @@ void loop() {
     case 'a': {
       // read the ADC
       uint16_t adc;
-      if (! sim.getADCVoltage(&adc)) {
+      if (! fona.getADCVoltage(&adc)) {
         Serial.println(F("Failed to read ADC"));
       } else {
         Serial.print(F("ADC = ")); Serial.print(adc); Serial.println(F(" mV"));
@@ -128,14 +143,14 @@ void loop() {
     case 'b': {
         // read the battery voltage and percentage
         uint16_t vbat;
-        if (! sim.getBattVoltage(&vbat)) {
+        if (! fona.getBattVoltage(&vbat)) {
           Serial.println(F("Failed to read Batt"));
         } else {
           Serial.print(F("VBat = ")); Serial.print(vbat); Serial.println(F(" mV"));
         }
  
 
-        if (! sim.getBattPercent(&vbat)) {
+        if (! fona.getBattPercent(&vbat)) {
           Serial.println(F("Failed to read Batt"));
         } else {
           Serial.print(F("VPct = ")); Serial.print(vbat); Serial.println(F("%"));
@@ -152,7 +167,7 @@ void loop() {
         readline(PIN, 3);
         Serial.println(PIN);
         Serial.print(F("Unlocking SIM card: "));
-        if (! sim.unlockSIM(PIN)) {
+        if (! fona.unlockSIM(PIN)) {
           Serial.println(F("Failed"));
         } else {
           Serial.println(F("OK!"));
@@ -162,14 +177,14 @@ void loop() {
 
     case 'C': {
         // read the CCID
-        sim.getSIMCCID(replybuffer);  // make sure replybuffer is at least 21 bytes!
+        fona.getSIMCCID(replybuffer);  // make sure replybuffer is at least 21 bytes!
         Serial.print(F("SIM CCID = ")); Serial.println(replybuffer);
         break;
     }
 
     case 'i': {
         // read the RSSI
-        uint8_t n = sim.getRSSI();
+        uint8_t n = fona.getRSSI();
         int8_t r;
         
         Serial.print(F("RSSI = ")); Serial.print(n); Serial.print(": ");
@@ -186,7 +201,7 @@ void loop() {
     
     case 'n': {
         // read the network/cellular status
-        uint8_t n = sim.getNetworkStatus();
+        uint8_t n = fona.getNetworkStatus();
         Serial.print(F("Network status ")); 
         Serial.print(n);
         Serial.print(F(": "));
@@ -206,7 +221,7 @@ void loop() {
       Serial.print(F("Set Vol %"));
       uint8_t vol = readnumber();
       Serial.println();
-      if (! sim.setVolume(vol)) {
+      if (! fona.setVolume(vol)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
@@ -215,31 +230,31 @@ void loop() {
     }
 
     case 'V': {
-      uint8_t v = sim.getVolume();
-      Serial.print(v); Serial.println("%");
+      uint8_t v = fona.getVolume();
+      Serial.print(v); Serial.println(F("%"));
     
       break; 
     }
     
     case 'H': {
       // Set Headphone output
-      if (! sim.setAudio(SIM90X_HEADSETAUDIO)) {
+      if (! fona.setAudio(SIM90X_HEADSETAUDIO)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
       }
-      sim.setMicVolume(SIM90X_HEADSETAUDIO, 15);
+      fona.setMicVolume(SIM90X_HEADSETAUDIO, 15);
       break;
     }
     case 'e': {
       // Set External output
-      if (! sim.setAudio(SIM90X_EXTAUDIO)) {
+      if (! fona.setAudio(SIM90X_EXTAUDIO)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
       }
 
-      sim.setMicVolume(SIM90X_EXTAUDIO, 10);
+      fona.setMicVolume(SIM90X_EXTAUDIO, 10);
       break;
     }
 
@@ -250,23 +265,23 @@ void loop() {
       uint8_t kittone = readnumber();
       Serial.println();
       // play for 1 second (1000 ms)
-      if (! sim.playToolkitTone(kittone, 1000)) {
+      if (! fona.playToolkitTone(kittone, 1000)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
       }
       break;
     }
-
+    
     /*** PWM ***/
-
+    
     case 'P': {
       // PWM Buzzer output @ 2KHz max
       flushSerial();
       Serial.print(F("PWM Freq, 0 = Off, (1-2000): "));
       uint16_t freq= readnumber();
       Serial.println();
-      if (!sim.setPWM(freq)) {
+      if (! fona.setPWM(freq)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
@@ -283,7 +298,7 @@ void loop() {
       readline(number, 30);
       Serial.println();
       Serial.print(F("Calling ")); Serial.println(number);
-      if (!sim.callPhone(number)) {
+      if (!fona.callPhone(number)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("Sent!"));
@@ -293,7 +308,7 @@ void loop() {
     }
     case 'h': {
        // hang up! 
-      if (! sim.hangUp()) {
+      if (! fona.hangUp()) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
@@ -303,7 +318,7 @@ void loop() {
 
     case 'p': {
        // pick up! 
-      if (! sim.pickUp()) {
+      if (! fona.pickUp()) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("OK!"));
@@ -315,7 +330,7 @@ void loop() {
     
     case 'N': {
         // read the number of SMS's!
-        int8_t smsnum = sim.getNumSMS();
+        int8_t smsnum = fona.getNumSMS();
         if (smsnum < 0) {
           Serial.println(F("Could not read # SMS"));
         } else {
@@ -332,20 +347,20 @@ void loop() {
       Serial.print(F("\n\rReading SMS #")); Serial.println(smsn);
 
       // Retrieve SMS sender address/phone number.
-      if (! sim.getSMSSender(smsn, replybuffer, 250)) {
-        Serial.println("Failed!");
+      if (! fona.getSMSSender(smsn, replybuffer, 250)) {
+        Serial.println(F("Failed!"));
         break;
       }
       Serial.print(F("FROM: ")); Serial.println(replybuffer);
 
       // Retrieve SMS value.
       uint16_t smslen;
-      if (! sim.readSMS(smsn, replybuffer, 250, &smslen)) { // pass in buffer and max len!
+      if (! fona.readSMS(smsn, replybuffer, 250, &smslen)) { // pass in buffer and max len!
         Serial.println("Failed!");
         break;
       }
       Serial.print(F("***** SMS #")); Serial.print(smsn); 
-      Serial.print(" ("); Serial.print(smslen); Serial.println(F(") bytes *****"));
+      Serial.print(F(" (")); Serial.print(smslen); Serial.println(F(") bytes *****"));
       Serial.println(replybuffer);
       Serial.println(F("*****"));
       
@@ -353,11 +368,11 @@ void loop() {
     }
     case 'R': {
       // read all SMS
-      int8_t smsnum = sim.getNumSMS();
+      int8_t smsnum = fona.getNumSMS();
       uint16_t smslen;
       for (int8_t smsn=1; smsn<=smsnum; smsn++) {
         Serial.print(F("\n\rReading SMS #")); Serial.println(smsn);
-        if (!sim.readSMS(smsn, replybuffer, 250, &smslen)) {  // pass in buffer and max len!
+        if (!fona.readSMS(smsn, replybuffer, 250, &smslen)) {  // pass in buffer and max len!
            Serial.println(F("Failed!"));
            break;
         }
@@ -370,7 +385,7 @@ void loop() {
         }
         
         Serial.print(F("***** SMS #")); Serial.print(smsn); 
-        Serial.print(" ("); Serial.print(smslen); Serial.println(F(") bytes *****"));
+        Serial.print(F(" (")); Serial.print(smslen); Serial.println(F(") bytes *****"));
         Serial.println(replybuffer);
         Serial.println(F("*****"));
       }
@@ -384,7 +399,19 @@ void loop() {
       uint8_t smsn = readnumber();
       
       Serial.print(F("\n\rDeleting SMS #")); Serial.println(smsn);
-      if (sim.deleteSMS(smsn)) {
+      if (fona.deleteSMS(smsn)) {
+        Serial.println(F("OK!"));
+      } else {
+        Serial.println(F("Couldn't delete"));
+      }
+      break;
+    }
+
+    case 'D': {
+      // delete all SMS
+      flushSerial();
+      Serial.print(F("\n\rDeleting all SMSs"));
+      if (fona.deleteSMSs()) {
         Serial.println(F("OK!"));
       } else {
         Serial.println(F("Couldn't delete"));
@@ -402,7 +429,7 @@ void loop() {
       Serial.print(F("Type out one-line message (140 char): "));
       readline(message, 140);
       Serial.println(message);
-      if (!sim.sendSMS(sendto, message)) {
+      if (!fona.sendSMS(sendto, message)) {
         Serial.println(F("Failed"));
       } else {
         Serial.println(F("Sent!"));
@@ -415,7 +442,14 @@ void loop() {
 
     case 'y': {
       // enable network time sync
-      if (!sim.enableNetworkTimeSync(true))
+      if (!fona.enableNetworkTimeSync(true))
+        Serial.println(F("Failed to enable"));
+      break;
+    }
+
+    case 'Y': {
+      // enable NTP time sync
+      if (!fona.enableNTPTimeSync(true, F("pool.ntp.org")))
         Serial.println(F("Failed to enable"));
       break;
     }
@@ -424,30 +458,38 @@ void loop() {
         // read the time
         char buffer[23];
 
-        sim.getTime(buffer, 23);  // make sure replybuffer is at least 23 bytes!
+        fona.getTime(buffer, 23);  // make sure replybuffer is at least 23 bytes!
         Serial.print(F("Time = ")); Serial.println(buffer);
         break;
     }
-
+    
     /*********************************** GPRS */
     
     case 'g': {
        // turn GPRS off
-       if (!sim.enableGPRS(false))  
+       if (!fona.enableGPRS(false))  
          Serial.println(F("Failed to turn off"));
        break;
     }
     case 'G': {
        // turn GPRS on
-       if (!sim.enableGPRS(true))  
+       if (!fona.enableGPRS(true))  
          Serial.println(F("Failed to turn on"));
        break;
     }
-    case 'I': {
-      // Get GPRS status
-      Serial.print(F("GPRS State: "));
-      Serial.println(sim.GPRSstate());
-      break;
+    case 'l': {
+       // check for GSMLOC (requires GPRS)
+       uint16_t returncode;
+       
+       if (!fona.getGSMLoc(&returncode, replybuffer, 250))
+         Serial.println(F("Failed!"));
+       if (returncode == 0) {
+         Serial.println(replybuffer);
+       } else {
+         Serial.print(F("Fail code #")); Serial.println(returncode);
+       }
+       
+       break;
     }
     case 'w': {
       // read website URL
@@ -462,13 +504,13 @@ void loop() {
       Serial.println(url);
       
        Serial.println(F("****"));
-       if (!sim.HTTP_GET_start(url, &statuscode, (uint16_t *)&length)) {
-         Serial.println("Failed!");
+       if (!fona.HTTP_GET_start(url, &statuscode, (uint16_t *)&length)) {
+         Serial.println(F("Failed!"));
          break;
        }
        while (length > 0) {
-         while (sim.available()) {
-           char c = sim.read();
+         while (fona.available()) {
+           char c = fona.read();
            
            // Serial.write is too slow, we'll write directly to Serial register!
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
@@ -482,7 +524,7 @@ void loop() {
          }
        }
        Serial.println(F("\n****"));
-       sim.HTTP_GET_end();
+       fona.HTTP_GET_end();
        break;
     }
     
@@ -503,13 +545,13 @@ void loop() {
       Serial.println(data);
       
        Serial.println(F("****"));
-       if (!sim.HTTP_POST_start(url, F("application/x-www-form-urlencoded"), (uint8_t *) data, strlen(data), &statuscode, (uint16_t *)&length)) {
-         Serial.println("Failed!");
+       if (!fona.HTTP_POST_start(url, F("text/plain"), (uint8_t *) data, strlen(data), &statuscode, (uint16_t *)&length)) {
+         Serial.println(F("Failed!"));
          break;
        }
        while (length > 0) {
-         while (sim.available()) {
-           char c = sim.read();
+         while (fona.available()) {
+           char c = fona.read();
            
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
            loop_until_bit_is_set(UCSR0A, UDRE0); /* Wait until data register empty. */
@@ -523,7 +565,7 @@ void loop() {
          }
        }
        Serial.println(F("\n****"));
-       sim.HTTP_POST_end();
+       fona.HTTP_POST_end();
        break;
     }
     /*****************************************/
@@ -532,10 +574,11 @@ void loop() {
       Serial.println(F("Creating SERIAL TUBE"));
       while (1) {
         while (Serial.available()) {
-          sim.write(Serial.read());
+    delay(1);
+          fona.write(Serial.read());
         }
-        if (sim.available()) {
-          Serial.write(sim.read());
+        if (fona.available()) {
+          Serial.write(fona.read());
         }
       }
       break;
@@ -549,8 +592,8 @@ void loop() {
   }
   // flush input
   flushSerial();
-  while (sim.available()) {
-    Serial.write(sim.read());
+  while (fona.available()) {
+    Serial.write(fona.read());
   }
 
 }
