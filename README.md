@@ -1,6 +1,8 @@
 SIM90X
 =====
 
+**This library requires Arduino v1.0.6 or higher**
+
 SIM90X is a tiny library for Arduino that provide a simple way to manage GSM modules based on SIM90X chipset.
 
 This library is based on [FONA](https://github.com/adafruit/Adafruit_FONA_Library) and it is written and maintained

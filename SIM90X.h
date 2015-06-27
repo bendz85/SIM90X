@@ -170,6 +170,8 @@ class SIM90X : public Stream {
 
   // Helper functions to verify responses.
   boolean expectReply(const __FlashStringHelper *reply, uint16_t timeout = 10000);
+  boolean sendCheckReply(char *send, char *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReply(const __FlashStringHelper *send, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
 
   // Phone Book
   boolean getPhonebook(uint8_t addr, char *number, int number_length, char *name, int name_length);
@@ -201,8 +203,6 @@ class SIM90X : public Stream {
   uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const __FlashStringHelper *suffix, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
   uint8_t getReplyQuoted(const __FlashStringHelper *prefix, const char *suffix, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
 
-  boolean sendCheckReply(char *send, char *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
-  boolean sendCheckReply(const __FlashStringHelper *send, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(const __FlashStringHelper *prefix, char *suffix, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(const __FlashStringHelper *prefix, int32_t suffix, int32_t suffix2, const __FlashStringHelper *reply, uint16_t timeout = SIM90X_DEFAULT_TIMEOUT_MS);
